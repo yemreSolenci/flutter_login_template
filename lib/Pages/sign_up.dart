@@ -49,7 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: const Text('Kayıt Ol'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -62,11 +62,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildTextField(
                     controller: _conFirstName,
                     focusNode: _firstNameFocusNode,
-                    hintText: 'First Name',
+                    hintText: 'İsim',
                     icon: Icons.person,
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter your first name';
+                        return 'Lütfen isminizi giriniz';
                       }
                       return null;
                     },
@@ -77,11 +77,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildTextField(
                     controller: _conLastName,
                     focusNode: _lastNameFocusNode,
-                    hintText: 'Last Name',
+                    hintText: 'Soyisim',
                     icon: Icons.person,
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter your last name';
+                        return 'Lütfen soyisminizi giriniz';
                       }
                       return null;
                     },
@@ -92,11 +92,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildTextField(
                     controller: _conUserName,
                     focusNode: _userNameFocusNode,
-                    hintText: 'Username',
+                    hintText: 'Kullanıcı Adı',
                     icon: Icons.person,
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter your username';
+                        return 'Lütfen kullanıcı adınızı giriniz';
                       }
                       return null;
                     },
@@ -107,11 +107,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildTextField(
                     controller: _conCity,
                     focusNode: _cityFocusNode,
-                    hintText: 'City',
+                    hintText: 'Şehir',
                     icon: Icons.location_city,
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter your city';
+                        return 'Lütfen şehrinizi giriniz';
                       }
                       return null;
                     },
@@ -122,7 +122,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildPasswordField(
                     controller: _conPassword,
                     focusNode: _passwordFocusNode,
-                    hintText: 'Password',
+                    hintText: 'Parola',
                     isVisible: isPasswordVisible,
                     onToggleVisibility: () {
                       setState(() {
@@ -131,10 +131,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     },
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter a password';
+                        return 'Lütfen parolanızı giriniz';
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return 'Parola en az 6 karakter olmalıdır';
                       }
                       return null;
                     },
@@ -146,7 +146,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   _buildPasswordField(
                     controller: _conConfirmPassword,
                     focusNode: _confirmPasswordFocusNode,
-                    hintText: 'Confirm Password',
+                    hintText: 'Parola (Tekrar)',
                     isVisible: isConfirmPasswordVisible,
                     onToggleVisibility: () {
                       setState(() {
@@ -155,10 +155,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     },
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please confirm your password';
+                        return 'Lütfen parolanızı tekrar giriniz';
                       }
                       if (value != _conPassword.text) {
-                        return 'Passwords do not match';
+                        return 'Parolalar aynı olmalıdır';
                       }
                       return null;
                     },
@@ -182,7 +182,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                     ),
-                    child: const Text('Sign Up'),
+                    child: const Text('Kayıt Ol'),
                   ),
                 ],
               ),
@@ -267,7 +267,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       // Here you can add your sign-up logic, e.g., API call
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign up successful!')),
+        const SnackBar(content: Text('Kayıt olundu!')),
       );
       Navigator.pushReplacementNamed(
           context, '/'); // Redirect to home after sign up

@@ -24,7 +24,7 @@ class _AuthServiceState extends State<AuthService> {
   void _checkRole() {
     //  TODO: Role Check from Database
     // Using `context` is safe here as it's within a state class
-    if (true) {
+    if (!true) {
       Navigator.pushReplacementNamed(context, '/uDashb');
     } else {
       Navigator.pushReplacementNamed(context, '/aDashb');
@@ -34,6 +34,10 @@ class _AuthServiceState extends State<AuthService> {
   @override
   Widget build(BuildContext context) {
     // Implement your build method
-    return Container(); // Placeholder widget, replace with your desired widget tree
+    return Scaffold(
+      body: Center(
+        child: Text('Yükleniyor...'),
+      ),
+    );
   }
 }

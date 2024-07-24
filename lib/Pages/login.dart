@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Materials/tFieldContainer.dart';
 import 'package:flutter_login_template/Pages/sign_up.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,6 +26,7 @@ class _LoginPageState extends State<LoginPage>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this);
+    _checkLoginStatus(); // Giriş durumunu kontrol et
   }
 
   @override
@@ -36,7 +38,7 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void login() {
+  void login() async {
     showDialog(
       context: context,
       builder: (context) {
@@ -47,9 +49,12 @@ class _LoginPageState extends State<LoginPage>
     );
 
     // Simulate a login process
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
       Navigator.pop(context);
       if (_conUserName.text == 'test' && _conPassword.text == 'password') {
+        // Giriş başarılı, durumu sakla
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
         Navigator.pushReplacementNamed(context, '/auth');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,6 +62,16 @@ class _LoginPageState extends State<LoginPage>
         );
       }
     });
+  }
+
+  void _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isLoggedIn = prefs.getBool('isLoggedIn');
+
+    if (isLoggedIn == true) {
+      // Kullanıcı zaten giriş yapmış, otomatik yönlendirme
+      Navigator.pushReplacementNamed(context, '/auth');
+    }
   }
 
   @override
@@ -70,20 +85,27 @@ class _LoginPageState extends State<LoginPage>
               key: _formKey,
               child: Column(
                 children: [
+                  const Text(
+                    'Giriş',
+                    style: TextStyle(
+                      fontSize: 40.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   // Kullanıcı adı alanı
                   TextFieldContainer(
                     child: TextFormField(
                       controller: _conUserName,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'Please enter your username';
+                          return 'Lütfen kullanıcı adınızı girin';
                         }
                         return null;
                       },
                       decoration: const InputDecoration(
                         icon: Icon(Icons.person),
                         border: InputBorder.none,
-                        hintText: 'Username',
+                        hintText: 'Kullanıcı adı',
                       ),
                       onFieldSubmitted: (value) {
                         // Parola alanına geç
@@ -100,14 +122,14 @@ class _LoginPageState extends State<LoginPage>
                       obscureText: !isVisible,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'Please enter your password';
+                          return 'Lütfen parolanızı girin';
                         }
                         return null;
                       },
                       decoration: InputDecoration(
                         icon: const Icon(Icons.lock),
                         border: InputBorder.none,
-                        hintText: 'Password',
+                        hintText: 'Parola',
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
@@ -138,7 +160,7 @@ class _LoginPageState extends State<LoginPage>
                         login();
                       }
                     },
-                    child: const Text('Login'),
+                    child: const Text('Giriş Yap'),
                   ),
                   const SizedBox(height: 16.0),
 
@@ -149,7 +171,7 @@ class _LoginPageState extends State<LoginPage>
                       MaterialPageRoute(
                           builder: (context) => const SignUpPage()),
                     ),
-                    child: const Text('Sign Up'),
+                    child: const Text('Kayıt Ol'),
                   ),
                 ],
               ),
