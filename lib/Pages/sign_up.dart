@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Materials/tFieldContainer.dart';
+import 'package:flutter_login_template/Services/api_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -18,15 +21,11 @@ class _SignUpPageState extends State<SignUpPage> {
   final _conPassword = TextEditingController();
   final _conConfirmPassword = TextEditingController();
 
-  final FocusNode _firstNameFocusNode = FocusNode();
-  final FocusNode _lastNameFocusNode = FocusNode();
-  final FocusNode _userNameFocusNode = FocusNode();
-  final FocusNode _cityFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
-  final FocusNode _confirmPasswordFocusNode = FocusNode();
-
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
+  bool isLoading = false; // Yükleme durumu değişkeni
+
+  final apiService = ApiService();
 
   @override
   void dispose() {
@@ -36,13 +35,51 @@ class _SignUpPageState extends State<SignUpPage> {
     _conCity.dispose();
     _conPassword.dispose();
     _conConfirmPassword.dispose();
-    _firstNameFocusNode.dispose();
-    _lastNameFocusNode.dispose();
-    _userNameFocusNode.dispose();
-    _cityFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    _confirmPasswordFocusNode.dispose();
     super.dispose();
+  }
+
+  void signUp() async {
+    setState(() {
+      isLoading = true; // Yükleme durumunu başlat
+    });
+
+    if (_formKey.currentState!.validate()) {
+      try {
+        final success = await apiService.register(
+          _conUserName.text.trim(),
+          _conPassword.text.trim(),
+          firstName: _conFirstName.text.trim(),
+          lastName: _conLastName.text.trim(),
+          city: _conCity.text.trim(),
+          context: context,
+        );
+
+        if (success == 'ok') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kayıt olundu!')),
+          );
+          Navigator.pushReplacementNamed(context, '/'); // Anasayfaya yönlendir
+        } else {
+          // Kayıt başarısız oldu
+        }
+      } catch (e) {
+        // Hata durumunu yakalayın
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bir hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          isLoading = false; // Yükleme durumunu durdur
+        });
+      }
+    } else {
+      setState(() {
+        isLoading = false; // Hatalı form durumunda yükleme durumu durdur
+      });
+    }
   }
 
   @override
@@ -59,9 +96,10 @@ class _SignUpPageState extends State<SignUpPage> {
               key: _formKey,
               child: Column(
                 children: [
+                  // İlk isim alanı
                   _buildTextField(
                     controller: _conFirstName,
-                    focusNode: _firstNameFocusNode,
+                    label: 'İsim',
                     hintText: 'İsim',
                     icon: Icons.person,
                     validator: (value) {
@@ -70,13 +108,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      FocusScope.of(context).requestFocus(_lastNameFocusNode);
-                    },
                   ),
+
+                  // Soyisim alanı
                   _buildTextField(
                     controller: _conLastName,
-                    focusNode: _lastNameFocusNode,
+                    label: 'Soyisim',
                     hintText: 'Soyisim',
                     icon: Icons.person,
                     validator: (value) {
@@ -85,13 +122,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      FocusScope.of(context).requestFocus(_userNameFocusNode);
-                    },
                   ),
+
+                  // Kullanıcı adı alanı
                   _buildTextField(
                     controller: _conUserName,
-                    focusNode: _userNameFocusNode,
+                    label: 'Kullanıcı Adı',
                     hintText: 'Kullanıcı Adı',
                     icon: Icons.person,
                     validator: (value) {
@@ -100,28 +136,26 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      FocusScope.of(context).requestFocus(_cityFocusNode);
-                    },
                   ),
+
+                  // Şehir alanı
                   _buildTextField(
                     controller: _conCity,
-                    focusNode: _cityFocusNode,
+                    label: 'Şehir',
                     hintText: 'Şehir',
                     icon: Icons.location_city,
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Lütfen şehrinizi giriniz';
+                        return 'Lütfen şehrinizi giriniz';
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                    },
                   ),
+
+                  // Parola alanı
                   _buildPasswordField(
                     controller: _conPassword,
-                    focusNode: _passwordFocusNode,
+                    label: 'Parola',
                     hintText: 'Parola',
                     isVisible: isPasswordVisible,
                     onToggleVisibility: () {
@@ -138,14 +172,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      FocusScope.of(context)
-                          .requestFocus(_confirmPasswordFocusNode);
-                    },
                   ),
+
+                  // Parola (Tekrar) alanı
                   _buildPasswordField(
                     controller: _conConfirmPassword,
-                    focusNode: _confirmPasswordFocusNode,
+                    label: 'Parola (Tekrar)',
                     hintText: 'Parola (Tekrar)',
                     isVisible: isConfirmPasswordVisible,
                     onToggleVisibility: () {
@@ -162,27 +194,21 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       return null;
                     },
-                    onFieldSubmitted: (value) {
-                      if (_formKey.currentState!.validate()) {
-                        signUp();
-                      }
-                    },
                   ),
+
                   const SizedBox(height: 16.0),
+
+                  // Kayıt Ol butonu
                   ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        signUp();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      fixedSize: Size(MediaQuery.of(context).size.width, 55.0),
-                      backgroundColor: Theme.of(context).primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                    ),
-                    child: const Text('Kayıt Ol'),
+                    onPressed: isLoading // Yüklenme durumu kontrolü
+                        ? null // Yükleme durumunda butonu devre dışı bırak
+                        : signUp,
+                    child: isLoading // Yüklenme durumu kontrolü
+                        ? const CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
+                        : const Text('Kayıt Ol'),
                   ),
                 ],
               ),
@@ -195,18 +221,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _buildTextField({
     required TextEditingController controller,
+    required String label,
     required String hintText,
     required IconData icon,
     String? Function(String?)? validator,
-    required Function(String) onFieldSubmitted,
-    required FocusNode focusNode,
   }) {
     return TextFieldContainer(
       child: TextFormField(
         controller: controller,
-        focusNode: focusNode,
         validator: validator,
-        onFieldSubmitted: onFieldSubmitted,
         decoration: InputDecoration(
           icon: Icon(icon),
           border: InputBorder.none,
@@ -218,26 +241,17 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _buildPasswordField({
     required TextEditingController controller,
+    required String label,
     required String hintText,
     required bool isVisible,
     required VoidCallback onToggleVisibility,
     String? Function(String?)? validator,
-    required Function(String) onFieldSubmitted,
-    required FocusNode focusNode,
   }) {
-    return Container(
-      margin: const EdgeInsets.all(8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.0),
-        color: Theme.of(context).primaryColor.withOpacity(0.2),
-      ),
+    return TextFieldContainer(
       child: TextFormField(
         controller: controller,
-        focusNode: focusNode,
-        validator: validator,
         obscureText: !isVisible,
-        onFieldSubmitted: onFieldSubmitted,
+        validator: validator,
         decoration: InputDecoration(
           icon: const Icon(Icons.lock),
           border: InputBorder.none,
@@ -249,28 +263,5 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
-  }
-
-  void signUp() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
-
-    // Simulate a sign-up process
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context);
-
-      // Here you can add your sign-up logic, e.g., API call
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayıt olundu!')),
-      );
-      Navigator.pushReplacementNamed(
-          context, '/'); // Redirect to home after sign up
-    });
   }
 }

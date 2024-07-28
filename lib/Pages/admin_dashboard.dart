@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Materials/listContainer.dart';
+import 'package:flutter_login_template/Model/device.dart';
+import 'package:flutter_login_template/Model/user.dart';
+import 'package:flutter_login_template/Pages/edit_item.dart';
+import 'package:flutter_login_template/Services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -10,43 +15,53 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  final List<String> devices = [
-    'Cihaz 1',
-    'Cihaz 2',
-    'Cihaz 3',
-    'Cihaz 4',
-    'Cihaz 5',
-    'Cihaz 6',
-    'Cihaz 7',
-    'Cihaz 8',
-    'Cihaz 9',
-    'Cihaz 10',
-    'Cihaz 11',
-    'Cihaz 12',
-  ];
-  final List<String> users = [
-    'Kullanıcı 1',
-    'Kullanıcı 2',
-    'Kullanıcı 3',
-    'Kullanıcı 4',
-    'Kullanıcı 5',
-    'Kullanıcı 6',
-    'Kullanıcı 7',
-    'Kullanıcı 8',
-    'Kullanıcı 9',
-    'Kullanıcı 10',
-  ];
+  List<User> users = [];
+  User? selectedUser;
 
-  String? selectedDevice;
-  String? selectedUser;
+  List<Device> devices = [];
+  Device? selectedDevice;
+
+  final apiService =
+      ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDevices();
+    fetchUsers();
+  }
 
   Future<void> logout(BuildContext context) async {
     // Remove the login status from SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isLoggedIn');
+    await prefs.setBool('isLoggedIn', false);
 
     // Navigate to the login page
     Navigator.of(context).pushReplacementNamed('/');
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      final fetchedUsers = await apiService.fetchUsers();
+      setState(() {
+        users = fetchedUsers;
+      });
+      print('Kullanıcılar alınamadı: $users'); // Kullanıcıları konsola yazdır
+    } catch (e) {
+      print('Hata: $e'); // Hata mesajını konsola yazdır
+    }
+  }
+
+  Future<void> fetchDevices() async {
+    try {
+      final fetchedDevices = await apiService.fetchDevices();
+      setState(() {
+        devices = fetchedDevices;
+      });
+      print('Cihazlar alınamadı: $devices');
+    } catch (e) {
+      print('Hata: $e');
+    }
   }
 
   @override
@@ -54,41 +69,108 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
-        actions: [
-          IconButton(
-            onPressed: () => logout(context),
-            icon: Icon(Icons.logout, color: Colors.grey[200]),
-          )
-        ],
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: () {
+                // Drawer'ı aç
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+              ),
+              child: const Text(
+                'Menü',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            /*ListTile(
+              leading: const Icon(Icons.devices),
+              title: const Text('Cihazlar'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text('Kullanıcılar'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),*/
+            ListTile(
+              leading: const Icon(Icons.exit_to_app),
+              title: const Text('Çıkış Yap'),
+              onTap: () {
+                logout(context);
+              },
+            ),
+          ],
+        ),
       ),
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
+        child: ListView(
           children: [
             const SizedBox(height: 10),
-            const Text('Cihazlar', style: TextStyle(fontSize: 20)),
-            ListContainer(
-              items: devices,
-              selectedItem: selectedDevice,
-              onItemSelected: (item) {
-                setState(() {
-                  selectedDevice = item;
-                  selectedUser = null;
-                });
-              },
+            const Text(
+              'Cihazlar',
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
+            devices.isNotEmpty
+                ? DeviceListContainer(
+                    devices: devices,
+                    selectedDevice: selectedDevice,
+                    onDeviceSelected: (device) {
+                      setState(() {
+                        selectedDevice = device;
+                        selectedUser = null;
+                      });
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => DeviceEditPage(device: device),
+                        ),
+                      );
+                    },
+                  )
+                : const Text('Hiç cihaz bulunamadı'),
             const SizedBox(height: 30),
-            const Text('Kullanıcılar', style: TextStyle(fontSize: 20)),
-            ListContainer(
-              items: users,
-              selectedItem: selectedUser,
-              onItemSelected: (item) {
-                setState(() {
-                  selectedUser = item;
-                  selectedDevice = null;
-                });
-              },
+            const Text(
+              'Kullanıcılar',
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
+            users.isNotEmpty
+                ? UserListContainer(
+                    users: users,
+                    selectedUser: selectedUser,
+                    onUserSelected: (user) {
+                      setState(() {
+                        selectedUser = user;
+                        selectedDevice = null;
+                      });
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => UserEditPage(user: user),
+                        ),
+                      );
+                    },
+                  )
+                : const Text(
+                    'Hiç kullanıcı bulunamadı'), // Kullanıcı yoksa mesaj
           ],
         ),
       ),

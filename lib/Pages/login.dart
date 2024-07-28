@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Materials/tFieldContainer.dart';
 import 'package:flutter_login_template/Pages/sign_up.dart';
+import 'package:flutter_login_template/Services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_login_template/Services/encryption_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,12 +25,16 @@ class _LoginPageState extends State<LoginPage>
   final FocusNode _passwordFocusNode = FocusNode();
 
   bool isVisible = false;
+  bool isLoading = false; // Yüklenme durumu değişkeni
+
+  final apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this);
     _checkLoginStatus(); // Giriş durumunu kontrol et
+    _loadCredentials(); // Kullanıcı adı ve şifreyi yükle
   }
 
   @override
@@ -39,29 +47,32 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void login() async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+    setState(() {
+      isLoading = true; // Yüklenme durumunu başlat
+    });
 
-    // Simulate a login process
-    Future.delayed(const Duration(seconds: 2), () async {
-      Navigator.pop(context);
-      if (_conUserName.text == 'test' && _conPassword.text == 'password') {
-        // Giriş başarılı, durumu sakla
+    // Giriş işlemi sırasında yüklenme animasyonu göster
+    try {
+      final success = await apiService.login(
+          _conUserName.text.trim(), _conPassword.text.trim(), context);
+      if (success) {
+        print('Giriş başarılı.');
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('username', _conUserName.text.trim());
+        await prefs.setString(
+            'password',
+            EncryptionService().encryptPassword(
+                _conPassword.text.trim())); // Şifreyi şifrelenmiş olarak sakla
         Navigator.pushReplacementNamed(context, '/auth');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid username or password')),
-        );
+        print('Giriş başarısız.');
       }
-    });
+    } finally {
+      setState(() {
+        isLoading = false; // Yüklenme durumunu durdur
+      });
+    }
   }
 
   void _checkLoginStatus() async {
@@ -69,8 +80,21 @@ class _LoginPageState extends State<LoginPage>
     bool? isLoggedIn = prefs.getBool('isLoggedIn');
 
     if (isLoggedIn == true) {
-      // Kullanıcı zaten giriş yapmış, otomatik yönlendirme
-      Navigator.pushReplacementNamed(context, '/auth');
+      bool isServerActive = await apiService.checkServerStatus(context);
+      if (isServerActive) {
+        Navigator.pushReplacementNamed(context, '/auth');
+      } else {
+        print('Sunucu aktif değil.');
+      }
+    }
+  }
+
+  void _loadCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString('username');
+
+    if (username != null) {
+      _conUserName.text = username; // Kullanıcı adını yükle
     }
   }
 
@@ -93,85 +117,111 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   // Kullanıcı adı alanı
-                  TextFieldContainer(
-                    child: TextFormField(
-                      controller: _conUserName,
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Lütfen kullanıcı adınızı girin';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.person),
-                        border: InputBorder.none,
-                        hintText: 'Kullanıcı adı',
+                  Container(
+                    constraints: BoxConstraints(maxWidth: 500),
+                    child: TextFieldContainer(
+                      child: TextFormField(
+                        controller: _conUserName,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Lütfen kullanıcı adınızı girin';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          icon: Icon(Icons.person),
+                          border: InputBorder.none,
+                          hintText: 'Kullanıcı adı',
+                        ),
+                        onFieldSubmitted: (value) {
+                          // Parola alanına geç
+                          FocusScope.of(context)
+                              .requestFocus(_passwordFocusNode);
+                        },
                       ),
-                      onFieldSubmitted: (value) {
-                        // Parola alanına geç
-                        FocusScope.of(context).requestFocus(_passwordFocusNode);
-                      },
                     ),
                   ),
 
                   // Parola alanı
-                  TextFieldContainer(
-                    child: TextFormField(
-                      controller: _conPassword,
-                      focusNode: _passwordFocusNode,
-                      obscureText: !isVisible,
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Lütfen parolanızı girin';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        icon: const Icon(Icons.lock),
-                        border: InputBorder.none,
-                        hintText: 'Parola',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              isVisible =
-                                  !isVisible; // Parola görünürlüğünü değiştirme
-                            });
-                          },
-                          icon: Icon(
-                            isVisible ? Icons.visibility_off : Icons.visibility,
+                  Container(
+                    constraints: BoxConstraints(maxWidth: 500),
+                    child: TextFieldContainer(
+                      child: TextFormField(
+                        controller: _conPassword,
+                        focusNode: _passwordFocusNode,
+                        obscureText: !isVisible,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Lütfen parolanızı girin';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          icon: const Icon(Icons.lock),
+                          border: InputBorder.none,
+                          hintText: 'Parola',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                isVisible =
+                                    !isVisible; // Parola görünürlüğünü değiştirme
+                              });
+                            },
+                            icon: Icon(
+                              isVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
                           ),
                         ),
+                        onFieldSubmitted: (value) {
+                          // Login butonuna bas
+                          if (_formKey.currentState!.validate()) {
+                            login();
+                          }
+                        },
                       ),
-                      onFieldSubmitted: (value) {
-                        // Login butonuna bas
-                        if (_formKey.currentState!.validate()) {
-                          login();
-                        }
-                      },
                     ),
                   ),
 
                   const SizedBox(height: 16.0),
 
                   // Login button
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        login();
-                      }
-                    },
-                    child: const Text('Giriş Yap'),
+                  Container(
+                    constraints: BoxConstraints(maxWidth: 300),
+                    child: ElevatedButton(
+                      onPressed: isLoading // Yüklenme durumu kontrolü
+                          ? null // Yüklenme durumunda butonu devre dışı bırak
+                          : () {
+                              if (_formKey.currentState!.validate()) {
+                                login();
+                              }
+                            },
+                      child: isLoading // Yüklenme durumu kontrolü
+                          ? const CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
+                          : const Text('Giriş Yap'),
+                    ),
                   ),
                   const SizedBox(height: 16.0),
 
                   // Sign Up button
-                  ElevatedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignUpPage()),
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: ElevatedButton(
+                      onPressed:
+                          isLoading // Yüklenme durumunda butonu devre dışı bırak
+                              ? null
+                              : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SignUpPage()),
+                                  ),
+                      child: const Text('Kayıt Ol'),
                     ),
-                    child: const Text('Kayıt Ol'),
                   ),
                 ],
               ),

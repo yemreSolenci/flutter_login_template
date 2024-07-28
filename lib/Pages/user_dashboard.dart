@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Materials/listContainer.dart';
+import 'package:flutter_login_template/Model/device.dart';
+import 'package:flutter_login_template/Services/api_service.dart'; // API servisinizi ekleyin
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserDashboard extends StatefulWidget {
@@ -10,38 +13,37 @@ class UserDashboard extends StatefulWidget {
 }
 
 class _UserDashboardState extends State<UserDashboard> {
-  final List<String> devices = [
-    'Cihaz 1',
-    'Cihaz 2',
-  ];
+  Device? selectedDevice;
+  List<Device> devices = [];
+  Map<Device, List<Map<String, String>>> deviceData = {};
 
-  String? selectedDevice;
+  final apiService =
+      ApiService();
 
-  // Örnek veriler
-  final Map<String, List<Map<String, dynamic>>> deviceData = {
-    'Cihaz 1': [
-      {'zaman': '2024-07-23 10:00', 'değişken': 'Sıcaklık', 'değer': '25°C'},
-      {'zaman': '2024-07-23 10:05', 'değişken': 'Nem', 'değer': '60%'},
-    ],
-    'Cihaz 2': [
-      {'zaman': '2024-07-23 10:10', 'değişken': 'Sıcaklık', 'değer': '22°C'},
-      {'zaman': '2024-07-23 10:15', 'değişken': 'Nem', 'değer': '55%'},
-      {'zaman': '2024-07-23 10:20', 'değişken': 'Basınç', 'değer': '1013 hPa'},
-      {'zaman': '2024-07-23 10:25', 'değişken': 'Işık', 'değer': '300 Lux'},
-      {'zaman': '2024-07-23 10:30', 'değişken': 'Sıcaklık', 'değer': '21°C'},
-      {'zaman': '2024-07-23 10:20', 'değişken': 'Basınç', 'değer': '1013 hPa'},
-      {'zaman': '2024-07-23 10:25', 'değişken': 'Işık', 'değer': '300 Lux'},
-      {'zaman': '2024-07-23 10:30', 'değişken': 'Sıcaklık', 'değer': '21°C'},
-      {'zaman': '2024-07-23 10:20', 'değişken': 'Basınç', 'değer': '1013 hPa'},
-      {'zaman': '2024-07-23 10:25', 'değişken': 'Işık', 'değer': '300 Lux'},
-      {'zaman': '2024-07-23 10:30', 'değişken': 'Sıcaklık', 'değer': '21°C'},
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    fetchUserDevices();
+  }
+
+  Future<void> fetchUserDevices() async {
+    // Kullanıcı ID'sini SharedPreferences'dan al
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int userId = prefs.getInt('userId') ?? 0; // Kullanıcı ID'sini alın
+
+    try {
+      devices = await apiService.fetchUserDevices(userId);
+      setState(() {});
+    } catch (e) {
+      print('Cihazlar alınırken hata oluştu: $e');
+      // Hata mesajı gösterme
+    }
+  }
 
   Future<void> logout(BuildContext context) async {
     // Remove the login status from SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isLoggedIn');
+    await prefs.setBool('isLoggedIn', false);
 
     // Navigate to the login page
     Navigator.of(context).pushReplacementNamed('/');
@@ -65,16 +67,18 @@ class _UserDashboardState extends State<UserDashboard> {
           children: [
             const SizedBox(height: 30),
             const Text('Cihazlar', style: TextStyle(fontSize: 20)),
-            ListContainer(
-              height: 128,
-              items: devices,
-              selectedItem: selectedDevice,
-              onItemSelected: (item) {
-                setState(() {
-                  selectedDevice = item;
-                });
-              },
-            ),
+            devices.isNotEmpty
+                ? DeviceListContainer(
+                    height: 128,
+                    devices: devices,
+                    selectedDevice: selectedDevice,
+                    onDeviceSelected: (device) {
+                      setState(() {
+                        selectedDevice = device;
+                      });
+                    },
+                  )
+                : const Text('Hiç cihaz bulunamadı'),
             if (selectedDevice != null)
               Expanded(
                 child: Padding(
@@ -82,7 +86,9 @@ class _UserDashboardState extends State<UserDashboard> {
                   child: Column(
                     children: [
                       Text(
-                        '$selectedDevice',
+                        selectedDevice?.name?.isNotEmpty == true
+                            ? selectedDevice!.name!
+                            : 'İsimsiz',
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -90,8 +96,6 @@ class _UserDashboardState extends State<UserDashboard> {
                       Expanded(
                         child: SingleChildScrollView(
                           child: DataTable(
-                            horizontalMargin:
-                                16, // Sütun başlıkları ve hücreler arası boşluk
                             columns: const [
                               DataColumn(label: Text('Zaman')),
                               DataColumn(label: Text('Değişken')),

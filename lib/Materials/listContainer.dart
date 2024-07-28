@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_login_template/Model/device.dart';
+import 'package:flutter_login_template/Model/user.dart';
 
-class ListContainer extends StatelessWidget {
-  final List<String> items;
-  final String? selectedItem;
-  final ValueChanged<String> onItemSelected;
+class UserListContainer extends StatelessWidget {
+  final List<User> users;
+  final User? selectedUser;
+  final ValueChanged<User> onUserSelected;
   final double? height;
 
-  const ListContainer({
+  const UserListContainer({
     Key? key,
-    required this.items,
-    required this.selectedItem,
-    required this.onItemSelected,
+    required this.users,
+    required this.selectedUser,
+    required this.onUserSelected,
     this.height,
   }) : super(key: key);
 
@@ -33,28 +35,114 @@ class ListContainer extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
         child: ListView.builder(
-          itemCount: items.length,
+          itemCount: users.length,
           itemBuilder: (context, index) {
+            final user = users[index];
             return Container(
               margin:
                   const EdgeInsets.symmetric(vertical: 2.0, horizontal: 2.0),
               decoration: BoxDecoration(
-                color: selectedItem == items[index]
+                color: selectedUser == user
                     ? Theme.of(context)
                         .primaryColor
-                        .withOpacity(0.8) // Selected item color
+                        .withOpacity(0.8) // Seçilen öğe rengi
                     : Theme.of(context)
                         .primaryColor
-                        .withOpacity(0.3), // Other items
+                        .withOpacity(0.3), // Diğer öğeler
                 border: Border.all(
-                  color: Colors.grey, // Border color
+                  color: Colors.grey, // Kenar rengi
                   width: 1,
                 ),
-                borderRadius: BorderRadius.circular(10), // Corner radius
+                borderRadius: BorderRadius.circular(10), // Köşe yarıçapı
               ),
               child: ListTile(
-                title: Text(items[index]),
-                onTap: () => onItemSelected(items[index]),
+                title: Text(user.username),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ID: ${user.id}'),
+                    Row(
+                      children: [
+                        Text('Role: ${user.role}    '),
+                        Text('Active: ${user.isActive ? "Evet" : "Hayır"}'),
+                      ],
+                    ),
+                  ],
+                ),
+                onTap: () => onUserSelected(user),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class DeviceListContainer extends StatelessWidget {
+  final List<Device> devices;
+  final Device? selectedDevice;
+  final ValueChanged<Device> onDeviceSelected;
+  final double? height;
+
+  const DeviceListContainer({
+    Key? key,
+    required this.devices,
+    required this.selectedDevice,
+    required this.onDeviceSelected,
+    this.height,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final double containerHeight =
+        height ?? MediaQuery.of(context).size.height * 0.35;
+
+    return Container(
+      height: containerHeight,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        border: Border.all(
+          color: Theme.of(context).primaryColor.withAlpha(100),
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      margin: const EdgeInsets.only(left: 25, right: 25),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: ListView.builder(
+          itemCount: devices.length,
+          itemBuilder: (context, index) {
+            final device = devices[index];
+            return Container(
+              margin:
+                  const EdgeInsets.symmetric(vertical: 2.0, horizontal: 2.0),
+              decoration: BoxDecoration(
+                color: selectedDevice == device
+                    ? Theme.of(context)
+                        .primaryColor
+                        .withOpacity(0.8) // Seçilen öğe rengi
+                    : Theme.of(context)
+                        .primaryColor
+                        .withOpacity(0.3), // Diğer öğeler
+                border: Border.all(
+                  color: Colors.grey, // Kenar rengi
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(10), // Köşe yarıçapı
+              ),
+              child: ListTile(
+                title: Text(device.name ?? 'İsimsiz'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ID: ${device.id}'),
+                    Text(
+                        'Son Bağlantı: ${device.lastConnection?.toString() ?? 'Hiç'}'),
+                  ],
+                ),
+                onTap: () => onDeviceSelected(device),
               ),
             );
           },
