@@ -25,12 +25,12 @@ app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is healthy" });
 });
 
-// Kullanıcı güncelleme API'si
+// Kullanıcı güncelleme
 app.put("/users/:id", (req, res) => {
   const userId = parseInt(req.params.id);
   const updatedUser = req.body;
 
-  // Kullanıcıyı güncelleyen SQL sorgusu
+  // Kullanıcıyı güncelleyen
   const sql = "UPDATE users SET ? WHERE id = ?";
   db.query(sql, [updatedUser, userId], (err, result) => {
     if (err) {
@@ -39,7 +39,7 @@ app.put("/users/:id", (req, res) => {
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Güncellenen kullanıcıyı döndür
@@ -55,18 +55,17 @@ app.put("/users/:id", (req, res) => {
   });
 });
 
-// Cihaz güncelleme API'si
+// Cihaz güncelleme
 app.put("/devices/:id", (req, res) => {
   const deviceId = parseInt(req.params.id);
   const updatedDevice = req.body;
 
-  // Cihazı güncelleyen kod
   const deviceIndex = devices.findIndex((device) => device.id === deviceId);
   if (deviceIndex !== -1) {
     devices[deviceIndex] = { ...devices[deviceIndex], ...updatedDevice };
     res.status(200).json(devices[deviceIndex]);
   } else {
-    res.status(404).json({ error: "Cihaz bulunamadı" });
+    res.status(404).json({ error: "Device not found" });
   }
 });
 
@@ -84,13 +83,12 @@ app.get("/users", (req, res) => {
 
 // Cihazları alma
 app.get("/devices", (req, res) => {
-  const sql = "SELECT * FROM devices"; // devices tablonuzun adını kontrol edin
+  const sql = "SELECT * FROM devices";
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Error fetching devices: ", err);
       return res.status(500).json({ message: "Server error" });
     }
-    console.log("Fetched devices: ", results);
     res.json(results);
   });
 });
@@ -212,8 +210,6 @@ app.post("/login", (req, res) => {
 // Kullanıcının cihazlarını alma
 app.get("/users/:userId/devices", (req, res) => {
   const userId = parseInt(req.params.userId);
-
-  // Kullanıcının cihazlarını veritabanından çek
   const sql = `
     SELECT d.*
     FROM devices d
@@ -227,6 +223,65 @@ app.get("/users/:userId/devices", (req, res) => {
     }
 
     res.json(results);
+  });
+});
+
+// Kullanıcıya cihaz atama
+app.post("/users/:userId/devices", (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const devices = req.body;
+
+  // Önce mevcut cihazları kontrol et
+  const checkSql = "SELECT device_id FROM user_devices WHERE user_id = ?";
+  db.query(checkSql, [userId], (err, existingDevices) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    // Yeni eklenecek cihazları bul
+    const newDevices = devices.filter(
+      (device) => !existingDevices.some((d) => d.device_id === device.id)
+    );
+
+    // Yeni cihazları ekle
+    if (newDevices.length > 0) {
+      const sql = "INSERT INTO user_devices (user_id, device_id) VALUES ?";
+      const values = newDevices.map((device) => [userId, device.id]);
+
+      db.query(sql, [values], (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "Server error" });
+        }
+
+        res.status(200).json({ message: "Devices successfully assigned" });
+      });
+    } else {
+      res.status(200).json({ message: "Devices already assigned" });
+    }
+  });
+});
+
+// Kullanıcıdan cihaz silme
+app.delete("/users/:userId/devices/:deviceId", (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const deviceId = parseInt(req.params.deviceId);
+
+  const sql = "DELETE FROM user_devices WHERE user_id = ? AND device_id = ?";
+  db.query(sql, [userId, deviceId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "Device not found or not assigned to user" });
+    }
+
+    res.status(200).json({ message: "Device successfully wiped" });
   });
 });
 

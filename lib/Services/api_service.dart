@@ -5,7 +5,7 @@ import 'package:flutter_login_template/Model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'encryption_service.dart';
-import 'dart:async'; // TimeoutException için gerekli
+import 'dart:async';
 
 class ApiService {
   final String baseUrl =
@@ -145,6 +145,31 @@ class ApiService {
     }
   }
 
+  Future<String> getUserRole(String username) async {
+    try {
+      // Kullanıcı rolünü almak için API çağrısı yapın
+      final uri = Uri.parse(
+        '$baseUrl/getUserRole?username=$username',
+      );
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData.containsKey('role')) {
+          return responseData['role']; // 'role' alanını döndür
+        } else {
+          throw Exception('Rol bilgisi bulunamadı');
+        }
+      } else {
+        throw Exception('Rol alınamadı: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Hata durumunda daha fazla bilgi verin
+      throw Exception('Hata: $e');
+    }
+  }
+
   // Kullanıcı girişi
   Future<bool> login(
       String username, String password, BuildContext context) async {
@@ -197,6 +222,30 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Hata: $e');
+    }
+  }
+
+  // Kullanıcıya cihaz atama
+  Future<void> assignDevicesToUser(int userId, List<Device> devices) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/$userId/devices'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(devices.map((device) => device.toJson()).toList()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Cihazlar kullanıcıya atanamadı');
+    }
+  }
+
+// Kullanıcıdan cihaz kaldırma
+  Future<void> removeDeviceFromUser(int userId, int deviceId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/$userId/devices/$deviceId'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Cihaz kullanıcıdan kaldırılamadı');
     }
   }
 

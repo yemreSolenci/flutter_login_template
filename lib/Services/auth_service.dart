@@ -13,6 +13,8 @@ class AuthService extends StatefulWidget {
 }
 
 class _AuthServiceState extends State<AuthService> {
+  final apiService = ApiService();
+
   @override
   void initState() {
     super.initState();
@@ -32,9 +34,8 @@ class _AuthServiceState extends State<AuthService> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? username = prefs.getString('username');
 
-      if (username != null) {
-        // Kullanıcı rolünü doğrudan veritabanından veya API'den al
-        final userRole = await _getUserRole(username);
+      if (username?.isNotEmpty == true) {
+        final userRole = await apiService.getUserRole(username!);
 
         // Kullanıcı rolüne göre yönlendirme
         if (userRole == 'admin') {
@@ -46,7 +47,7 @@ class _AuthServiceState extends State<AuthService> {
           _handleUndefinedRole();
         }
       } else {
-        // Kullanıcı adı yoksa, giriş sayfasına yönlendir
+        throw Exception('Kullanıcı adı boş olamaz');
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
@@ -60,36 +61,6 @@ class _AuthServiceState extends State<AuthService> {
     // Tanımlanmamış bir rol durumunda yapılacak işlemler
     // Örneğin, kullanıcıyı bir hata sayfasına yönlendirebilirsiniz
     Navigator.pushReplacementNamed(context, '/error'); // Hata sayfası
-  }
-
-  Future<String> _getUserRole(String username) async {
-    // Kullanıcı adının boş olup olmadığını kontrol et
-    if (username.isEmpty) {
-      throw Exception('Kullanıcı adı boş olamaz');
-    }
-
-    try {
-      // Kullanıcı rolünü almak için API çağrısı yapın
-      final uri = Uri.parse(
-        '${kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000'}/getUserRole?username=$username',
-      );
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        if (responseData.containsKey('role')) {
-          return responseData['role']; // 'role' alanını döndür
-        } else {
-          throw Exception('Rol bilgisi bulunamadı');
-        }
-      } else {
-        throw Exception('Rol alınamadı: ${response.statusCode}');
-      }
-    } catch (e) {
-      // Hata durumunda daha fazla bilgi verin
-      throw Exception('Hata: $e');
-    }
   }
 
   @override

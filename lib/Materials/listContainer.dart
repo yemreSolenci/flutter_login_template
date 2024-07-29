@@ -63,8 +63,8 @@ class UserListContainer extends StatelessWidget {
                     Text('ID: ${user.id}'),
                     Row(
                       children: [
-                        Text('Role: ${user.role}    '),
-                        Text('Active: ${user.isActive ? "Evet" : "Hayır"}'),
+                        Text('Rol: ${user.role}    '),
+                        Text('Aktif: ${user.isActive ? "Evet" : "Hayır"}'),
                       ],
                     ),
                   ],
