@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Model/device.dart';
 import 'package:flutter_login_template/Model/user.dart';
+import 'package:flutter_login_template/Pages/edit_item.dart';
 
 class UserListContainer extends StatelessWidget {
   final List<User> users;
   final User? selectedUser;
   final ValueChanged<User> onUserSelected;
   final double? height;
+  final String userRole;
 
   const UserListContainer({
-    Key? key,
+    super.key,
     required this.users,
     required this.selectedUser,
     required this.onUserSelected,
     this.height,
-  }) : super(key: key);
+    required this.userRole,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +72,18 @@ class UserListContainer extends StatelessWidget {
                     ),
                   ],
                 ),
+                trailing: userRole == 'admin' // Rol kontrolü
+                    ? IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => UserEditPage(user: user),
+                            ),
+                          );
+                        },
+                      )
+                    : null, // Eğer admin değilse, butonu gizle
                 onTap: () => onUserSelected(user),
               ),
             );
@@ -84,14 +99,16 @@ class DeviceListContainer extends StatelessWidget {
   final Device? selectedDevice;
   final ValueChanged<Device> onDeviceSelected;
   final double? height;
+  final String userRole;
 
   const DeviceListContainer({
-    Key? key,
+    super.key,
     required this.devices,
     required this.selectedDevice,
     required this.onDeviceSelected,
     this.height,
-  }) : super(key: key);
+    required this.userRole,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +159,19 @@ class DeviceListContainer extends StatelessWidget {
                         'Son Bağlantı: ${device.lastConnection?.toString() ?? 'Hiç'}'),
                   ],
                 ),
+                trailing: userRole == 'admin' // Rol kontrolü
+                    ? IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DeviceEditPage(device: device),
+                            ),
+                          );
+                        },
+                      )
+                    : null, // Eğer admin değilse, butonu gizle
                 onTap: () => onDeviceSelected(device),
               ),
             );

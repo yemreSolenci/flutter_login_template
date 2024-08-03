@@ -9,12 +9,12 @@ import 'dart:async';
 
 class ApiService {
   final String baseUrl =
-      kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      'http://${kIsWeb ? 'localhost' : '10.0.2.2'}:3000'; //  'http://192.168.74.38:3000';
   final EncryptionService encryptionService = EncryptionService();
   final http.Client client = http.Client();
 
   // Timeout süresi
-  final Duration timeoutDuration = Duration(seconds: 10);
+  final Duration timeoutDuration = const Duration(seconds: 10);
 
   Future<bool> checkServerStatus(BuildContext context) async {
     try {
@@ -27,7 +27,11 @@ class ApiService {
         return false; // Sunucu aktif değil
       }
     } catch (e) {
-      print('Hata: $e');
+      if (kDebugMode) {
+        if (kDebugMode) {
+          print('Hata: $e');
+        }
+      }
       return false; // Sunucuya erişim sağlanamadı
     }
   }
@@ -122,7 +126,6 @@ class ApiService {
             backgroundColor: Colors.green);
         return 'ok';
       } else if (response.statusCode == 400) {
-        final responseData = json.decode(response.body);
         showSnackBarMessage(
             'Kayıt hatası: Kullanıcı adı zaten kayıtlı!', context);
         return 'username_exists';
@@ -170,6 +173,26 @@ class ApiService {
     }
   }
 
+  Future<int> getUserId(String username) async {
+    try {
+      final uri = Uri.parse('$baseUrl/getUserID?username=$username');
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData.containsKey('id')) {
+          return responseData['id'];
+        } else {
+          throw Exception('ID bilgisi bulunamadı');
+        }
+      } else {
+        throw Exception('ID alınamadı: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Hata: $e');
+    }
+  }
+
   // Kullanıcı girişi
   Future<bool> login(
       String username, String password, BuildContext context) async {
@@ -184,7 +207,6 @@ class ApiService {
 
       if (response.statusCode == 200) {
         // Yanıtı JSON formatında çözümleyin
-        final responseData = json.decode(response.body);
         return true;
       } else if (response.statusCode == 403) {
         showSnackBarMessage('Giriş hatası: Kullanıcı aktif değil!', context);
@@ -205,6 +227,24 @@ class ApiService {
       // Diğer hata durumlarını yakalayın
       showSnackBarMessage('Bir hata oluştu: $e', context);
       return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchDeviceData(int deviceId) async {
+    try {
+      final uri = Uri.parse('$baseUrl/deviceData?deviceId=$deviceId');
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        // API'den gelen veriyi ayrıştır
+        List<Map<String, dynamic>> data =
+            List<Map<String, dynamic>>.from(json.decode(response.body));
+        return data;
+      } else {
+        throw Exception('Veri alınamadı: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Hata: $e');
     }
   }
 

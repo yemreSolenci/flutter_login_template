@@ -6,11 +6,11 @@ class TextFieldContainer extends StatelessWidget {
   final EdgeInsetsGeometry padding;
 
   const TextFieldContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.margin = const EdgeInsets.all(8.0),
     this.padding = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

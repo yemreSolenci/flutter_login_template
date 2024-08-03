@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_login_template/Materials/textFieldContainer.dart';
+import 'package:flutter_login_template/Materials/text_field_container.dart';
 import 'package:flutter_login_template/Pages/sign_up.dart';
 import 'package:flutter_login_template/Services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,7 +55,9 @@ class _LoginPageState extends State<LoginPage>
       final success = await apiService.login(
           _conUserName.text.trim(), _conPassword.text.trim(), context);
       if (success) {
-        print('Giriş başarılı.');
+        if (kDebugMode) {
+          print('Giriş başarılı.');
+        }
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('username', _conUserName.text.trim());
@@ -66,7 +67,9 @@ class _LoginPageState extends State<LoginPage>
                 _conPassword.text.trim())); // Şifreyi şifrelenmiş olarak sakla
         Navigator.pushReplacementNamed(context, '/auth');
       } else {
-        print('Giriş başarısız.');
+        if (kDebugMode) {
+          print('Giriş başarısız.');
+        }
       }
     } finally {
       setState(() {
@@ -84,7 +87,9 @@ class _LoginPageState extends State<LoginPage>
       if (isServerActive) {
         Navigator.pushReplacementNamed(context, '/auth');
       } else {
-        print('Sunucu aktif değil.');
+        if (kDebugMode) {
+          print('Sunucu aktif değil.');
+        }
       }
     }
   }
@@ -118,7 +123,7 @@ class _LoginPageState extends State<LoginPage>
                   ),
                   // Kullanıcı adı alanı
                   Container(
-                    constraints: BoxConstraints(maxWidth: 500),
+                    constraints: const BoxConstraints(maxWidth: 500),
                     child: TextFieldContainer(
                       child: TextFormField(
                         controller: _conUserName,
@@ -144,7 +149,7 @@ class _LoginPageState extends State<LoginPage>
 
                   // Parola alanı
                   Container(
-                    constraints: BoxConstraints(maxWidth: 500),
+                    constraints: const BoxConstraints(maxWidth: 500),
                     child: TextFieldContainer(
                       child: TextFormField(
                         controller: _conPassword,
@@ -188,7 +193,7 @@ class _LoginPageState extends State<LoginPage>
 
                   // Login button
                   Container(
-                    constraints: BoxConstraints(maxWidth: 300),
+                    constraints: const BoxConstraints(maxWidth: 300),
                     child: ElevatedButton(
                       onPressed: isLoading // Yüklenme durumu kontrolü
                           ? null // Yüklenme durumunda butonu devre dışı bırak

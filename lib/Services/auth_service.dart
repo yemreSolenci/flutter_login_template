@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login_template/Services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class AuthService extends StatefulWidget {
   const AuthService({super.key});
@@ -47,12 +45,13 @@ class _AuthServiceState extends State<AuthService> {
           _handleUndefinedRole();
         }
       } else {
-        throw Exception('Kullanıcı adı boş olamaz');
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
       // Hata durumunda kullanıcıyı giriş sayfasına yönlendir
-      print('Error checking user role: $e'); // Hata mesajını konsola yazdır
+      if (kDebugMode) {
+        print('Error checking user role: $e');
+      } // Hata mesajını konsola yazdır
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
@@ -66,7 +65,7 @@ class _AuthServiceState extends State<AuthService> {
   @override
   Widget build(BuildContext context) {
     // Uygulama yükleniyor mesajı
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Text('Yükleniyor...'),
       ),

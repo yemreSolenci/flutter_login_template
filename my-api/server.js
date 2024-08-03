@@ -81,6 +81,31 @@ app.get("/users", (req, res) => {
   });
 });
 
+// Get User ID by username
+app.get("/getUserID", (req, res) => {
+  const username = req.query.username;
+
+  if (!username) {
+    return res.status(400).json({ error: "Username is required" });
+  }
+
+  // Kullanıcıyı veritabanından bul
+  const sql = "SELECT id FROM users WHERE username = ?";
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    if (result.length > 0) {
+      const user = result[0]; // Kullanıcıyı al
+      res.json({ id: user.id }); // Kullanıcı id döndür
+    } else {
+      res.status(404).json({ message: "User not found!" });
+    }
+  });
+});
+
 // Cihazları alma
 app.get("/devices", (req, res) => {
   const sql = "SELECT * FROM devices";
@@ -203,6 +228,29 @@ app.post("/login", (req, res) => {
       });
     } else {
       res.status(401).json({ message: "Invalid credentials!" });
+    }
+  });
+});
+
+app.get("/deviceData", (req, res) => {
+  const deviceId = req.query.deviceId;
+
+  if (!deviceId) {
+    return res.status(400).json({ error: "Device ID is required" });
+  }
+
+  // Cihaz verilerini veritabanından al
+  const sql = "SELECT * FROM device_data WHERE device_id = ?";
+  db.query(sql, [deviceId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    if (results.length > 0) {
+      res.json(results); // Cihaz verilerini döndür
+    } else {
+      res.status(404).json({ message: "No data found for this device" });
     }
   });
 });

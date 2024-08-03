@@ -6,10 +6,10 @@ class DeviceSelectionDialog extends StatefulWidget {
   final List<Device> assignedDevices;
 
   const DeviceSelectionDialog({
-    Key? key,
+    super.key,
     required this.allDevices,
     required this.assignedDevices,
-  }) : super(key: key);
+  });
 
   @override
   _DeviceSelectionDialogState createState() => _DeviceSelectionDialogState();
@@ -47,7 +47,7 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
                 ),
                 trailing: const Icon(Icons.check, color: Colors.green),
               );
-            }).toList(),
+            }),
             const Divider(),
             // Kullanılabilir cihazları listele
             ..._availableDevices.map((device) {
@@ -67,7 +67,7 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
                   });
                 },
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

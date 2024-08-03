@@ -1,7 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_login_template/Materials/textFieldContainer.dart';
+import 'package:flutter_login_template/Materials/text_field_container.dart';
 import 'package:flutter_login_template/Services/api_service.dart';
 
 class SignUpPage extends StatefulWidget {

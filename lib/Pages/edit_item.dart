@@ -1,7 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_login_template/Materials/devicesSelectionDialog.dart';
-import 'package:flutter_login_template/Materials/textFieldContainer.dart';
+import 'package:flutter_login_template/Materials/devices_selection_dialog.dart';
+import 'package:flutter_login_template/Materials/text_field_container.dart';
 import 'package:flutter_login_template/Model/device.dart';
 import 'package:flutter_login_template/Model/user.dart';
 import 'package:flutter_login_template/Services/api_service.dart';
@@ -11,7 +10,7 @@ final apiService = ApiService();
 class UserEditPage extends StatefulWidget {
   final User user;
 
-  const UserEditPage({Key? key, required this.user}) : super(key: key);
+  const UserEditPage({super.key, required this.user});
 
   @override
   _UserEditPageState createState() => _UserEditPageState();
@@ -27,12 +26,11 @@ class _UserEditPageState extends State<UserEditPage> {
   bool _isActive = true; // Indicates if the user is active
 
   late List<Device> _availableDevices = [];
-  late List<Device> _assignedDevicesOriginal =
-      []; // Original assigned devices from the database
   late List<Device> _assignedDevicesCurrent =
       []; // Current assigned devices for editing
-  List<Device> _devicesToRemove = []; // List to hold devices to be removed
-  int _maxDeviceCount = 2;
+  late final List<Device> _devicesToRemove =
+      []; // List to hold devices to be removed
+  final int _maxDeviceCount = 2;
 
   bool _isLoading = false;
 
@@ -80,12 +78,10 @@ class _UserEditPageState extends State<UserEditPage> {
     try {
       final devices = await apiService.fetchUserDevices(widget.user.id);
       setState(() {
-        _assignedDevicesOriginal = devices; // Save original assigned devices
         _assignedDevicesCurrent = List.from(devices); // Copy for editing
       });
     } catch (e) {
       setState(() {
-        _assignedDevicesOriginal = [];
         _assignedDevicesCurrent = [];
       });
     }
@@ -115,7 +111,7 @@ class _UserEditPageState extends State<UserEditPage> {
     try {
       await apiService.assignDevicesToUser(
           widget.user.id, _assignedDevicesCurrent);
-      showSnackBarMessage('Devices assigned to the user', context,
+      showSnackBarMessage('Kullanıcıya atanan cihazlar', context,
           backgroundColor: Colors.green);
       if (_devicesToRemove.isNotEmpty && _assignedDevicesCurrent.isNotEmpty) {
         //if have same device, delete from _devicesToRemove list
@@ -125,7 +121,7 @@ class _UserEditPageState extends State<UserEditPage> {
         }
       }
     } catch (e) {
-      showSnackBarMessage('Device assignment failed', context);
+      showSnackBarMessage('Cihaz ataması başarısız oldu', context);
     }
   }
 
@@ -141,10 +137,10 @@ class _UserEditPageState extends State<UserEditPage> {
             _devicesToRemove.contains(device)); // Remove from current list
         _devicesToRemove.clear(); // Clear the list of devices to remove
       });
-      showSnackBarMessage('Devices removed from the user', context,
+      showSnackBarMessage('Kullanıcıdan kaldırılan cihazlar', context,
           backgroundColor: Colors.green);
     } catch (e) {
-      showSnackBarMessage('Device removal failed', context);
+      showSnackBarMessage('Cihaz çıkarma işlemi başarısız oldu', context);
     }
   }
 
@@ -152,7 +148,7 @@ class _UserEditPageState extends State<UserEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit User'),
+        title: const Text('Kullanıcı Düzenle'),
       ),
       body: _isLoading
           ? const Center(
@@ -164,14 +160,15 @@ class _UserEditPageState extends State<UserEditPage> {
                 children: [
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'ID'),
+                      decoration: const InputDecoration(labelText: 'ID'),
                       controller: _idController,
                       enabled: false,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'Username'),
+                      decoration:
+                          const InputDecoration(labelText: 'Kullanıcı Adı'),
                       controller: _usernameController,
                     ),
                   ),
@@ -179,7 +176,7 @@ class _UserEditPageState extends State<UserEditPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Role',
+                        const Text('Rol',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold)),
                         Container(
@@ -196,12 +193,13 @@ class _UserEditPageState extends State<UserEditPage> {
                           child: DropdownButton<String>(
                             value: _selectedRole,
                             isExpanded: true,
-                            underline: SizedBox(),
+                            underline: const SizedBox(),
                             items:
                                 <String>['user', 'admin'].map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
-                                child: Text(value == 'user' ? 'User' : 'Admin'),
+                                child: Text(
+                                    value == 'user' ? 'Kullanıcı' : 'Yönetici'),
                               );
                             }).toList(),
                             onChanged: (String? newValue) {
@@ -216,24 +214,24 @@ class _UserEditPageState extends State<UserEditPage> {
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'First Name'),
+                      decoration: const InputDecoration(labelText: 'İsim'),
                       controller: _firstNameController,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'Last Name'),
+                      decoration: const InputDecoration(labelText: 'Soyisim'),
                       controller: _lastNameController,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'City'),
+                      decoration: const InputDecoration(labelText: 'Şehir'),
                       controller: _cityController,
                     ),
                   ),
                   SwitchListTile(
-                    title: const Text('Active'),
+                    title: const Text('Aktif'),
                     value: _isActive,
                     onChanged: (bool value) {
                       setState(() {
@@ -242,48 +240,49 @@ class _UserEditPageState extends State<UserEditPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  TextFieldContainer(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Devices',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            ..._assignedDevicesCurrent.map((device) => Chip(
-                                  label: Text(
-                                    '${device.name?.isNotEmpty == true ? device.name : 'Unnamed'} (ID: ${device.id})',
-                                  ),
-                                  onDeleted: () {
-                                    // Add device to removal list
-                                    setState(() {
-                                      _devicesToRemove.add(device);
-                                      _assignedDevicesCurrent.remove(device);
-                                    });
+                  if (_selectedRole == 'user')
+                    TextFieldContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Cihazlar',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              ..._assignedDevicesCurrent.map((device) => Chip(
+                                    label: Text(
+                                      '${device.name?.isNotEmpty == true ? device.name : 'İsimsiz'} (ID: ${device.id})',
+                                    ),
+                                    onDeleted: () {
+                                      // Add device to removal list
+                                      setState(() {
+                                        _devicesToRemove.add(device);
+                                        _assignedDevicesCurrent.remove(device);
+                                      });
+                                    },
+                                  )),
+                              if (_assignedDevicesCurrent.length <
+                                  _maxDeviceCount)
+                                ChoiceChip(
+                                  label: const Text('Cihaz Ekle'),
+                                  selected: false,
+                                  onSelected: (bool selected) {
+                                    if (selected) {
+                                      // Show device selection dialog
+                                      _showDeviceSelectionDialog();
+                                    }
                                   },
-                                )),
-                            if (_assignedDevicesCurrent.length <
-                                _maxDeviceCount)
-                              ChoiceChip(
-                                label: const Text('Add Device'),
-                                selected: false,
-                                onSelected: (bool selected) {
-                                  if (selected) {
-                                    // Show device selection dialog
-                                    _showDeviceSelectionDialog();
-                                  }
-                                },
-                              ),
-                          ],
-                        ),
-                      ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
@@ -304,21 +303,21 @@ class _UserEditPageState extends State<UserEditPage> {
 
                       try {
                         // Update user information
-                        final response = await apiService.updateUser(user);
-                        if (response != null) {
-                          // Save device assignments
-                          await _assignDevicesToUser();
-                          // Save device removals
-                          await _removeDevicesFromUser();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('User updated successfully')),
-                          );
-                          Navigator.pop(context); // Go back after saving
-                        }
+                        await apiService.updateUser(user);
+                        // Save device assignments
+                        await _assignDevicesToUser();
+                        // Save device removals
+                        await _removeDevicesFromUser();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Kullanıcı başarıyla güncellendi')),
+                        );
+                        Navigator.pop(context); // Go back after saving
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error updating user: $e')),
+                          SnackBar(
+                              content: Text(
+                                  'Kullanıcı güncellenirken hata oluştu: $e')),
                         );
                       } finally {
                         setState(() {
@@ -326,7 +325,7 @@ class _UserEditPageState extends State<UserEditPage> {
                         });
                       }
                     },
-                    child: const Text('Save'),
+                    child: const Text('Kaydet'),
                   ),
                 ],
               ),
@@ -350,7 +349,7 @@ class _UserEditPageState extends State<UserEditPage> {
 class DeviceEditPage extends StatefulWidget {
   final Device device;
 
-  const DeviceEditPage({Key? key, required this.device}) : super(key: key);
+  const DeviceEditPage({super.key, required this.device});
 
   @override
   _DeviceEditPageState createState() => _DeviceEditPageState();
@@ -405,29 +404,29 @@ class _DeviceEditPageState extends State<DeviceEditPage> {
                 children: [
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'ID'),
+                      decoration: const InputDecoration(labelText: 'ID'),
                       controller: _deviceIdController,
                       enabled: false,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration: InputDecoration(labelText: 'Cihaz Adı'),
+                      decoration: const InputDecoration(labelText: 'Cihaz Adı'),
                       controller: _deviceNameController,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
                       decoration:
-                          InputDecoration(labelText: 'Başlangıç Zamanı'),
+                          const InputDecoration(labelText: 'Başlangıç Zamanı'),
                       controller: _startTimeController,
                       enabled: false,
                     ),
                   ),
                   TextFieldContainer(
                     child: TextField(
-                      decoration:
-                          InputDecoration(labelText: 'Son Bağlantı Zamanı'),
+                      decoration: const InputDecoration(
+                          labelText: 'Son Bağlantı Zamanı'),
                       controller: _lastConnectionController,
                       enabled: false,
                     ),
@@ -449,15 +448,13 @@ class _DeviceEditPageState extends State<DeviceEditPage> {
 
                       try {
                         // API çağrısını yap
-                        final response = await apiService.updateDevice(
+                        await apiService.updateDevice(
                             device); // updateDevice metodunu çağır
-                        if (response != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Cihaz başarıyla güncellendi')),
-                          );
-                          Navigator.pop(context); // Kaydettikten sonra geri dön
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Cihaz başarıyla güncellendi')),
+                        );
+                        Navigator.pop(context); // Kaydettikten sonra geri dön
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

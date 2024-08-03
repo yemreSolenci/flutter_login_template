@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_login_template/Materials/listContainer.dart';
+import 'package:flutter_login_template/Materials/list_container.dart';
 import 'package:flutter_login_template/Model/device.dart';
 import 'package:flutter_login_template/Model/user.dart';
+import 'package:flutter_login_template/Pages/device_data.dart';
+import 'package:flutter_login_template/Pages/device_list.dart';
 import 'package:flutter_login_template/Pages/edit_item.dart';
+import 'package:flutter_login_template/Pages/user_list.dart';
 import 'package:flutter_login_template/Services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,8 +24,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   List<Device> devices = [];
   Device? selectedDevice;
 
-  final apiService =
-      ApiService();
+  final apiService = ApiService();
 
   @override
   void initState() {
@@ -46,9 +48,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       setState(() {
         users = fetchedUsers;
       });
-      print('Kullanıcılar alınamadı: $users'); // Kullanıcıları konsola yazdır
     } catch (e) {
-      print('Hata: $e'); // Hata mesajını konsola yazdır
+      if (kDebugMode) {
+        print('Hata: $e');
+      } // Hata mesajını konsola yazdır
     }
   }
 
@@ -58,9 +61,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       setState(() {
         devices = fetchedDevices;
       });
-      print('Cihazlar alınamadı: $devices');
     } catch (e) {
-      print('Hata: $e');
+      if (kDebugMode) {
+        print('Hata: $e');
+      }
     }
   }
 
@@ -72,7 +76,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: const Icon(Icons.menu),
               onPressed: () {
                 // Drawer'ı aç
                 Scaffold.of(context).openDrawer();
@@ -97,11 +101,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
             ),
-            /*ListTile(
+            ListTile(
               leading: const Icon(Icons.devices),
               title: const Text('Cihazlar'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Popup menüyü kapat
+                setState(() {
+                  selectedDevice = null;
+                  selectedUser = null;
+                });
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => DeviceListPage(devices: devices),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -109,8 +122,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
               title: const Text('Kullanıcılar'),
               onTap: () {
                 Navigator.pop(context);
+                setState(() {
+                  selectedDevice = null;
+                  selectedUser = null;
+                });
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => UserListPage(users: users),
+                  ),
+                );
               },
-            ),*/
+            ),
             ListTile(
               leading: const Icon(Icons.exit_to_app),
               title: const Text('Çıkış Yap'),
@@ -132,6 +154,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             devices.isNotEmpty
                 ? DeviceListContainer(
+                    userRole: 'admin',
                     devices: devices,
                     selectedDevice: selectedDevice,
                     onDeviceSelected: (device) {
@@ -141,8 +164,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       });
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => DeviceEditPage(device: device),
-                        ),
+                            builder: (context) =>
+                                DeviceDataPage(device: device)),
                       );
                     },
                   )
@@ -155,6 +178,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             users.isNotEmpty
                 ? UserListContainer(
+                    userRole: 'admin',
                     users: users,
                     selectedUser: selectedUser,
                     onUserSelected: (user) {
